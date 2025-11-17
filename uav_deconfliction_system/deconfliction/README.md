@@ -1,138 +1,96 @@
 # UAV Deconfliction System
 
-Production-grade drone conflict detection system for handling 10,000+ simultaneous flights.
-
 ## Architecture
 
-### Three-Stage Pipeline
-
-**Stage 1: Multi-Tier Filtering**
-- Temporal filter (10,000 → 400 drones)
-- Bounding box filter (400 → 50 drones)
-- Coarse spatial filter (50 → 10 drones)
-
-**Stage 2: 4D Occupancy Grid**
-- 100×100×100m spatial cells
-- 1-second temporal resolution
-- High-precision conflict detection
-
-**Stage 3: Risk Scoring**
-- Dynamic safety buffers
-- Severity classification (SAFE, LOW, WARNING, HIGH, CRITICAL)
-- Actionable recommendations
-
-## Module Structure
+## Three-Stage Pipeline
 
 ```
-uav_deconfliction/
-├── __init__.py              # Package interface
-├── models.py                # Core data models (87 lines)
-├── trajectory.py            # Trajectory interpolation (111 lines)
-├── filters.py               # Stage 1 filtering (163 lines)
-├── occupancy_grid.py        # Stage 2 grid search (115 lines)
-├── risk_scoring.py          # Stage 3 risk assessment (236 lines)
-├── deconfliction_system.py  # Main integration (213 lines)
-└── README.md                # This file
+Stage 1  Multi-Tier Filtering
+Temporal filter reduces traffic  10 , 000 → 400 drones)
+Bounding box filter further narrows down  400 → 50 
+Coarse spatial filter finalizes candidates for deep checks  50 → 10 
+Stage 2  4 D Occupancy Grid
+Spatial: 100  100  100 m cells
+Temporal: 1 - second resolution
+Enables high-precision conflict detection in space-time
+Stage 3  Risk Scoring
+Dynamic safety buffers based on drone parameters
+Severity classification: SAFE, LOW, WARNING, HIGH, CRITICAL
+Actionable recommendations for conflict mitigation
 ```
 
-**Total: 925 lines** (down from 901 in single file)
-
-**Average file size: ~130 lines** (vs 901 previously)
-
-## Quick Start
-
-```python
-from uav_deconfliction import (
-    ProductionDeconflictionSystem,
-    Mission,
-    Waypoint
+```
+deconfliction/
+├── __init__.py # Package interface and initialization
+├── models.py # Core data models: Waypoint, Mission, Conflict, etc.
+├── trajectory.py # Trajectory interpolation and path modeling
+├── filters.py # Stage 1: Multi-tier filtering implementation
+├── occupancy_grid.py # Stage 2: 4D occupancy grid conflict detection
+├── risk_scoring.py # Stage 3: Risk scoring and severity classification
+├── deconfliction_system.py # Main system integration tying all stages together
+├── test.py # Unit tests and example scenarios
+└── README.md # This documentation file
+```
+```
+from deconfliction import (
+ProductionDeconflictionSystem,
+Mission,
+Waypoint
 )
-
-# Initialize system
+# Initialize with safety buffers and sensor parameters
 system = ProductionDeconflictionSystem(
-    base_safety_buffer=50.0,
-    reaction_time=2.5,
-    max_accel=5.0,
-    gps_uncertainty=10.0
+base_safety_buffer=50.0,
+reaction_time=2.5,
+max_accel=5.0,
+gps_uncertainty=10.
 )
-
-# Define primary mission
+# Define a drone's mission with waypoints and schedule
 primary = Mission(
-    waypoints=[
-        Waypoint(0, 0, 100),
-        Waypoint(1000, 1000, 150),
-        Waypoint(2000, 0, 100)
-    ],
-    start_time=0,
-    end_time=300,
-    drone_id="PRIMARY-001"
+waypoints=[
+Waypoint( 0 , 0 , 100 ),
+Waypoint( 1000 , 1000 , 150 ),
+Waypoint( 2000 , 0 , 100 )
+],
+start_time= 0 ,
+end_time= 300 ,
+drone_id="PRIMARY-001"
 )
-
-# Register traffic drones
+# Register multiple traffic missions (list of Mission instances)
 for traffic_mission in traffic_missions:
-    system.register_mission(traffic_mission)
+system.register_mission(traffic_mission)
+# Evaluate for conflicts with primary mission
+```
 
-# Check for conflicts
+## Quick Start Example
+
+```
 is_clear, conflicts, metrics = system.check_mission(primary)
-
-# Generate report
+# Generate and print detailed report
 report = system.generate_report(primary, is_clear, conflicts, metrics)
 print(report)
 ```
+To confirm installation and imports:
 
-## API Reference
-
-### Core Classes
-
-#### `Waypoint(x, y, z=0.0)`
-3D spatial coordinate.
-
-**Methods:**
-- `to_array()` → np.ndarray
-- `distance_to(other)` → float
-
-#### `Mission(waypoints, start_time, end_time, drone_id)`
-Complete drone flight plan.
-
-**Attributes:**
-- `waypoints`: List[Waypoint]
-- `cruise_speed`: float (m/s, auto-computed)
-- `start_time`, `end_time`: float (seconds)
-
-**Methods:**
-- `duration()` → float
-- `total_distance()` → float
-- `get_bounding_box()` → Tuple[np.ndarray, np.ndarray]
-
-#### `ProductionDeconflictionSystem()`
-Main deconfliction interface.
-
-**Methods:**
-- `register_mission(mission)`: Add mission to airspace
-- `check_mission(primary)` → Tuple[bool, List[Conflict], Dict]
-- `generate_report(...)` → str
-
-### Performance
-
-- **Typical processing time**: <10ms for 100 drones
-- **Scalability**: O(N) complexity with staged filtering
-- **Memory efficient**: 4D grid uses sparse dictionary storage
-
-## Testing
-
-```python
-# Run example
-python -c "from deconfliction_system import ProductionDeconflictionSystem; \
-           print('Import successful!')"
 ```
+python -c "from deconfliction_system import ProductionDeconflictionSystem; print('Import
+```
+
+## Core Classes and Functions
+
+```
+Waypoint(x, y, z=0.0): 3 D point with distance computations
+Mission(waypoints, start_time, end_time, drone_id): Drone flight plan with path and timing
+metadata
+ProductionDeconflictionSystem(): Main deconfliction system interface
+register_mission(mission)
+check_mission(primary)
+generate_report(...)
+```
+## Testing
 
 ## Dependencies
 
-- Python 3.7+
-- NumPy
-- typing (standard library)
-- dataclasses (standard library)
-
-## License
-
-Proprietary - FlytBase Robotics Assignment
+```
+Python 3. 7 or newer
+NumPy
+Standard libraries: typing, dataclasses
